@@ -24,42 +24,42 @@ class PublicSchedules extends Component
     public function updatedSearch()
     {
         // Mengambil jadwal yang memiliki entri sesuai dengan pencarian
-        $this->schedules = Schedule::with(['scheduleEntries.lecturers'])
-            ->where(function ($query) {
-                $query->where('name', 'like', '%' . $this->search . '%')
-                    ->orWhereHas('scheduleEntries', function ($query) {
-                        $query->where('course', 'like', '%' . $this->search . '%')
-                            ->orWhere('session', 'like', '%' . $this->search . '%')
-                            ->orWhere('grub', 'like', '%' . $this->search . '%')
-                            ->orWhere('room', 'like', '%' . $this->search . '%')
-                            ->orWhere('credits', 'like', '%' . $this->search . '%')
-                            ->orWhereHas('lecturers', function ($query) {
-                                $query->where('name', 'like', '%' . $this->search . '%');
-                            });
-                    });
-            })->get();
+        $this->schedules = Schedule::with(['scheduleEntries' => function ($query) {
+            // Urutkan scheduleEntries berdasarkan day terlebih dahulu, lalu start_time
+            $query->orderBy('day', 'asc')->orderBy('start_time', 'asc');
+        }, 'scheduleEntries.lecturers'])
+        ->where(function ($query) {
+            $query->where('name', 'like', '%' . $this->search . '%')
+                ->orWhereHas('scheduleEntries', function ($query) {
+                    $query->where('course', 'like', '%' . $this->search . '%')
+                        ->orWhere('session', 'like', '%' . $this->search . '%')
+                        ->orWhere('grub', 'like', '%' . $this->search . '%')
+                        ->orWhere('room', 'like', '%' . $this->search . '%')
+                        ->orWhere('credits', 'like', '%' . $this->search . '%')
+                        ->orWhereHas('lecturers', function ($query) {
+                            $query->where('name', 'like', '%' . $this->search . '%');
+                        });
+                });
+        })->get();
         
-        // Menghapus jadwal yang tidak memiliki entri yang relevan
+        // Filter scheduleEntries untuk hanya menampilkan entri yang sesuai dengan pencarian
         foreach ($this->schedules as $schedule) {
-            // Filter entri yang sesuai dengan pencarian
             $schedule->scheduleEntries = $schedule->scheduleEntries->filter(function ($entry) {
                 return stripos($entry->course, $this->search) !== false ||
-                       stripos($entry->session, $this->search) !== false ||
-                       stripos($entry->grub, $this->search) !== false ||
-                       stripos($entry->room, $this->search) !== false ||
-                       stripos($entry->credits, $this->search) !== false ||
-                       stripos($entry->lecturers->name, $this->search) !== false;
+                    stripos($entry->session, $this->search) !== false ||
+                    stripos($entry->grub, $this->search) !== false ||
+                    stripos($entry->room, $this->search) !== false ||
+                    stripos($entry->credits, $this->search) !== false ||
+                    stripos($entry->lecturers->name, $this->search) !== false;
             });
-    
-            // Urutkan berdasarkan `start_time`
-            $schedule->scheduleEntries = $schedule->scheduleEntries->sortBy('start_time');
         }
-    
+
         // Menghapus jadwal yang tidak memiliki entri yang relevan
         $this->schedules = $this->schedules->filter(function ($schedule) {
             return $schedule->scheduleEntries->isNotEmpty();
         });
     }
+
     
     
     

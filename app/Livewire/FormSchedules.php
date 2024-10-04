@@ -32,8 +32,8 @@ class FormSchedules extends Component
     {
         // Ambil semua data schedule beserta entri jadwal dan dosen
         $this->schedules = Schedule::with(['scheduleEntries' => function ($query) {
-            // Urutkan scheduleEntries berdasarkan start_time secara ascending
-            $query->orderBy('start_time', 'asc');
+            // Urutkan scheduleEntries berdasarkan day terlebih dahulu, lalu start_time
+            $query->orderBy('day', 'asc')->orderBy('start_time', 'asc');
         }, 'scheduleEntries.lecturers'])->get();
     
         // Ambil semua data lecturer
