@@ -32,13 +32,15 @@ class FormSchedules extends Component
     {
         // Ambil semua data schedule beserta entri jadwal dan dosen
         $this->schedules = Schedule::with(['scheduleEntries' => function ($query) {
-            // Urutkan scheduleEntries berdasarkan day terlebih dahulu, lalu start_time
-            $query->orderBy('day', 'asc')->orderBy('start_time', 'asc');
+            // Urutkan scheduleEntries berdasarkan custom order untuk day (Senin ke Sabtu), lalu start_time
+            $query->orderByRaw("FIELD(day, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu')")
+                  ->orderBy('start_time', 'asc');
         }, 'scheduleEntries.lecturers'])->get();
-    
+        
         // Ambil semua data lecturer
         $this->lecturers = Lecturer::all();
     }
+    
     
 
     public function updatedSelectedScheduleId($scheduleId)

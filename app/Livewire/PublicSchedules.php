@@ -16,17 +16,26 @@ class PublicSchedules extends Component
 
     public function mount()
     {
-        $this->schedules = Schedule::with('scheduleEntries.lecturers')->get();
-        $this->lecturers = Lecturer::all(); 
+        // Ambil semua data schedule beserta entri jadwal dan dosen
+        $this->schedules = Schedule::with(['scheduleEntries' => function ($query) {
+            // Urutkan scheduleEntries berdasarkan custom order untuk day (Senin ke Sabtu), lalu start_time
+            $query->orderByRaw("FIELD(day, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu')")
+                  ->orderBy('start_time', 'asc');
+        }, 'scheduleEntries.lecturers'])->get();
+        
+        // Ambil semua data lecturer
+        $this->lecturers = Lecturer::all();
     }
+    
 
 
     public function updatedSearch()
     {
         // Mengambil jadwal yang memiliki entri sesuai dengan pencarian
         $this->schedules = Schedule::with(['scheduleEntries' => function ($query) {
-            // Urutkan scheduleEntries berdasarkan day terlebih dahulu, lalu start_time
-            $query->orderBy('day', 'asc')->orderBy('start_time', 'asc');
+            // Urutkan scheduleEntries berdasarkan custom order untuk day (Senin ke Sabtu), lalu start_time
+            $query->orderByRaw("FIELD(day, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu')")
+                  ->orderBy('start_time', 'asc');
         }, 'scheduleEntries.lecturers'])
         ->where(function ($query) {
             $query->where('name', 'like', '%' . $this->search . '%')
@@ -53,13 +62,13 @@ class PublicSchedules extends Component
                     stripos($entry->lecturers->name, $this->search) !== false;
             });
         }
-
+    
         // Menghapus jadwal yang tidak memiliki entri yang relevan
         $this->schedules = $this->schedules->filter(function ($schedule) {
             return $schedule->scheduleEntries->isNotEmpty();
         });
     }
-
+    
     
     
     
