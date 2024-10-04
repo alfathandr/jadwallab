@@ -4,7 +4,6 @@
 
     <div class="row mt-4">   
         
-    
         @livewire('form-schedules')
 
     </div>

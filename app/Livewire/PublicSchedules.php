@@ -38,9 +38,10 @@ class PublicSchedules extends Component
                             });
                     });
             })->get();
-    
+        
         // Menghapus jadwal yang tidak memiliki entri yang relevan
         foreach ($this->schedules as $schedule) {
+            // Filter entri yang sesuai dengan pencarian
             $schedule->scheduleEntries = $schedule->scheduleEntries->filter(function ($entry) {
                 return stripos($entry->course, $this->search) !== false ||
                        stripos($entry->session, $this->search) !== false ||
@@ -49,6 +50,9 @@ class PublicSchedules extends Component
                        stripos($entry->credits, $this->search) !== false ||
                        stripos($entry->lecturers->name, $this->search) !== false;
             });
+    
+            // Urutkan berdasarkan `start_time`
+            $schedule->scheduleEntries = $schedule->scheduleEntries->sortBy('start_time');
         }
     
         // Menghapus jadwal yang tidak memiliki entri yang relevan
@@ -56,7 +60,6 @@ class PublicSchedules extends Component
             return $schedule->scheduleEntries->isNotEmpty();
         });
     }
-    
     
     
     

@@ -30,10 +30,16 @@ class FormSchedules extends Component
 
     public function mount()
     {
-        // Ambil semua data schedule dan lecturer saat komponen di-mount
-        $this->schedules = Schedule::all();
+        // Ambil semua data schedule beserta entri jadwal dan dosen
+        $this->schedules = Schedule::with(['scheduleEntries' => function ($query) {
+            // Urutkan scheduleEntries berdasarkan start_time secara ascending
+            $query->orderBy('start_time', 'asc');
+        }, 'scheduleEntries.lecturers'])->get();
+    
+        // Ambil semua data lecturer
         $this->lecturers = Lecturer::all();
     }
+    
 
     public function updatedSelectedScheduleId($scheduleId)
     {
